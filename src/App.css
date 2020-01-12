@@ -1,38 +1,123 @@
-.App {
-  text-align: center;
+.app{
+	width: 100vw;
+	height: 100vh;
+	background-color: #333;
+	color: #fff;
+	font-family: 'Courier New', Courier, monospace;
+	padding: 10px 15px;
+	-webkit-box-sizing: border-box;
+	-moz-box-sizing: border-box;
+	box-sizing: border-box;
+	display: grid;
+	grid-template-columns: 380px auto 380px;
+	grid-template-rows: 65px 200px auto 380px;
+	grid-gap: 10px;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+.header{
+	grid-column: 1/1;
+	grid-row: 1;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
+.bold{
+	font-weight: bold;
 }
 
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+.good{
+	color: #00cc00;
 }
 
-.App-link {
-  color: #61dafb;
+.bad{
+	color: red;
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.warn{
+	color: orange;
+}
+
+.window{
+	border: 1px solid #fff;
+	padding: 10px;
+	background-color: #333;
+	color: #fff;
+	font-family: 'Courier New', Courier, monospace;
+}
+
+.live-data-window{
+	grid-column: 1;
+	grid-row: 2/4;
+	overflow: hidden;
+}
+.live-data-window #rawdata{
+	background-color: #525252;
+	padding: 5px 5px;
+	overflow-y: scroll;
+	font-size: 12px;
+	height: calc(100% - 45px);
+}
+.map-window{
+	grid-row: 4;
+	grid-column: 1;
+}
+.map-window #mapid{
+	width: 100%;
+	border: 0;
+	height: calc(100% - 37px);
+}
+
+.sensor-window{
+	grid-column: 3;
+	grid-row: 3/5;
+}
+
+.status-window{
+	grid-column: 3;
+	grid-row: 2;
+}
+
+.main-window{
+	grid-row: 2/5;
+	grid-column: 2;
+}
+
+.value-grid{
+	display: grid;
+	grid-template-columns: max-content auto;
+	column-gap: 10px;
+}
+
+.value-label{
+	grid-column: 1;
+}
+
+.value-bar-container{
+	width: 100%;
+	border: 1px solid #fff;
+	height: 11px;
+	display: inline-block;
+	grid-column: 2;
+	margin-top: 1px;
+}
+
+.value-bar{
+	width: 0;
+	height: 100%;
+	background-color: #fff;
+	transition: width 1s linear;
+	max-width: 100%;
+}
+
+.chart{
+	border: 2px solid #444;
+	margin-top: 10px;
+	margin-left: -2px;
+}
+
+button{
+	background-color: transparent;
+	border: 2px solid #fff;
+	color: #fff;
+	font-family: 'Courier New', Courier, monospace;
+	cursor: pointer;
+	float: right;
 }
