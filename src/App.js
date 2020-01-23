@@ -6,6 +6,8 @@ import io from 'socket.io-client'
 import L from 'leaflet'
 import { ResponsiveContainer, LineChart, Line, YAxis } from 'recharts'
 
+import MainSimulation from './MainSimulation'
+
 const socket = io('http://localhost:8000/')
 
 //const position = [47.492266, 19.031861]
@@ -18,7 +20,7 @@ class App extends React.Component{
 		this.mapZoomStart = 0
 		this.state = {
 			portStatus: {status: null},
-			currentData: {},
+			currentData: {uv1: 0, uv2: 0, uv3: 0, temp1: 0, temp2: 0, temp3: 0},
 			data: [],
 			status: null
 		}
@@ -29,21 +31,16 @@ class App extends React.Component{
 		L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {}).addTo(this.map)
 
 		socket.on('data', (data)=>{
+			//console.log(data)
 			document.getElementById('rawdata').prepend(document.createElement('br'))
 			document.getElementById('rawdata').prepend(data)
-			let sd = data.split(" ")
+			let dataObj = JSON.parse(data)
+
 			
-			let dataObj = {
-				lat: sd[0],
-				lon: sd[1],
-				uv1: sd[2],
-				uv2: sd[3],
-				uv3: sd[4]
-			}
 			let dataState = [...this.state.data, dataObj]
 			if (dataState.length>50) dataState.shift()
 			this.setState({currentData: dataObj, data: dataState})
-			let position = [sd[0],sd[1]]
+			let position = [dataObj.lat, dataObj.lon]
 
 			if (this.map.getZoom()===0) {
 				this.mapZoomStart = new Date()
@@ -72,7 +69,7 @@ class App extends React.Component{
 	render(){
 		return (
 			<div className="app">
-				<div className="header">
+				<div className="window header">
 					<b><div>ESA CanSat 2020</div>
 					<div>CSapat</div>
 					<div><Clock format={'YYYY.MM.DD HH:mm:ss'} ticking/></div>
@@ -90,9 +87,10 @@ class App extends React.Component{
 					<hr />
 					<div id="mapid"></div>
 				</div>
-				<div className="window main-window">
-					<div><b>...</b></div>
+				<div id="simulation-container" className="window main-window">
+					<div><b>Simulation</b></div>
 					<hr />
+					<MainSimulation currentData={this.state.currentData} />
 				</div>
 				<div className="window status-window">
 					<div><b>Status</b></div>
@@ -135,12 +133,29 @@ class App extends React.Component{
 					<div>GPS: {this.state.currentData.lat} {this.state.currentData.lon}</div>
 					<div>&nbsp;</div>
 					<div className="value-grid">
+						<div className="value-label">Temp1: {this.state.currentData.temp1.toPrecision(4).padStart(3, '0')}</div>
+						<div className="value-bar-container"><div className="value-bar" style={{backgroundColor: '#FFEB3B', width: (this.state.currentData.temp1/100)*100 + 50 + '%'}}></div></div>
+						<div className="value-label">Temp2: {this.state.currentData.temp2.toPrecision(4).padStart(3, '0')}</div>
+						<div className="value-bar-container"><div className="value-bar" style={{backgroundColor: '#2196f3', width: (this.state.currentData.temp2/100)*100 + 50 + '%'}}></div></div>
+						<div className="value-label">Temp3: {this.state.currentData.temp3.toPrecision(4).padStart(3, '0')}</div>
+						<div className="value-bar-container"><div className="value-bar" style={{backgroundColor: '#4caf50', width: (this.state.currentData.temp3/100)*100 + 50 + '%'}}></div></div>
+					</div>
+					<ResponsiveContainer height={150} className="chart">
+						<LineChart data={this.state.data}>
+							<Line isAnimationActive={false} dot={false} type="linear" dataKey="temp1" stroke="#FFEB3B" />
+							<Line isAnimationActive={false} dot={false} type="linear" dataKey="temp2" stroke="#2196f3" />
+							<Line isAnimationActive={false} dot={false} type="linear" dataKey="temp3" stroke="#4caf50" />
+							<YAxis tick={false} tickLine={false} width={0} domain={[Math.min.apply({}, this.state.data.map(u=>Math.min(u.temp1, u.temp2, u.temp3))), Math.max.apply({}, this.state.data.map(u=>Math.max(u.temp1, u.temp2, u.temp3)))]}/>
+						</LineChart>
+					</ResponsiveContainer>
+					<div>&nbsp;</div>
+					<div className="value-grid">
 						<div className="value-label">UV1: {String(this.state.currentData.uv1).padStart(4, '0')}</div>
-						<div className="value-bar-container"><div className="value-bar" style={{backgroundColor: '#FFEB3B', width: (this.state.currentData.uv1/1023)*100 + '%'}}></div></div>
+						<div className="value-bar-container"><div className="value-bar" style={{backgroundColor: '#FFEB3B', width: (this.state.currentData.uv1/50)*100 + '%'}}></div></div>
 						<div className="value-label">UV2: {String(this.state.currentData.uv2).padStart(4, '0')}</div>
-						<div className="value-bar-container"><div className="value-bar" style={{backgroundColor: '#2196f3', width: (this.state.currentData.uv2/1023)*100 + '%'}}></div></div>
+						<div className="value-bar-container"><div className="value-bar" style={{backgroundColor: '#2196f3', width: (this.state.currentData.uv2/50)*100 + '%'}}></div></div>
 						<div className="value-label">UV3: {String(this.state.currentData.uv3).padStart(4, '0')}</div>
-						<div className="value-bar-container"><div className="value-bar" style={{backgroundColor: '#4caf50', width: (this.state.currentData.uv3/1023)*100 + '%'}}></div></div>
+						<div className="value-bar-container"><div className="value-bar" style={{backgroundColor: '#4caf50', width: (this.state.currentData.uv3/50)*100 + '%'}}></div></div>
 					</div>
 					<div>
 					<ResponsiveContainer height={150} className="chart">
@@ -148,7 +163,7 @@ class App extends React.Component{
 							<Line isAnimationActive={false} dot={false} type="linear" dataKey="uv1" stroke="#FFEB3B" />
 							<Line isAnimationActive={false} dot={false} type="linear" dataKey="uv2" stroke="#2196f3" />
 							<Line isAnimationActive={false} dot={false} type="linear" dataKey="uv3" stroke="#4caf50" />
-							<YAxis tick={false} tickLine={false} width={0} domain={[0,1023]}/>
+							<YAxis tick={false} tickLine={false} width={0} domain={[Math.min.apply({}, this.state.data.map(u=>Math.min(u.uv1, u.uv2, u.uv3))), Math.max.apply({}, this.state.data.map(u=>Math.max(u.uv1, u.uv2, u.uv3)))]}/>
 						</LineChart>
 					</ResponsiveContainer>
 					</div>
