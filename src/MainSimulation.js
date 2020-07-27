@@ -16,7 +16,6 @@ class MainSimulation extends React.Component {
 		this.controls = null
 		this.animate = this.animate.bind(this)
 		this.addToScene = this.addToScene.bind(this)
-		
 	}
 
 	componentDidMount(){
@@ -86,7 +85,7 @@ class MainSimulation extends React.Component {
 	animate(){
 		
 		let can = this.scene.getObjectByName("can")
-		
+		/*
 		let acc = this.props.currentData.acc
 		let mag = this.props.currentData.mag
 		if (acc){
@@ -100,7 +99,10 @@ class MainSimulation extends React.Component {
 			can.rotation.y = yaw
 			can.rotation.z = pitch
 			console.log(180*yaw/Math.PI)
-		}
+		}*/
+		can.rotation.x = (this.props.currentData.roll)*Math.PI/180
+		can.rotation.y = (this.props.currentData.course)*Math.PI/180
+		can.rotation.z = (this.props.currentData.pitch)*Math.PI/180
 		this.camera.lookAt(can.position)
 		/*
 		if(can.position.y>150){
