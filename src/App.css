@@ -10,7 +10,7 @@
 	box-sizing: border-box;
 	display: grid;
 	grid-template-columns: 380px auto 380px;
-	grid-template-rows: 75px 80px auto auto 380px;
+	grid-template-rows: 75px 120px auto auto 360px;
 	grid-gap: 10px;
 }
 
@@ -85,6 +85,11 @@
 	display: grid;
 	grid-template-columns: max-content auto;
 	column-gap: 10px;
+}
+
+.value-grid.underlined div{
+	border-bottom: 1px solid #fff;
+	padding: 3px 0;
 }
 
 .value-label{

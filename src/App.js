@@ -32,8 +32,8 @@ class App extends React.Component{
 
 		socket.on('data', (data)=>{
 			//console.log(data)
-			document.getElementById('rawdata').prepend(document.createElement('br'))
-			document.getElementById('rawdata').prepend(data)
+			//document.getElementById('rawdata').prepend(document.createElement('br'))
+			//document.getElementById('rawdata').prepend(data)
 			let dataObj = JSON.parse(data)
 
 			
@@ -67,6 +67,14 @@ class App extends React.Component{
 		})
 	}
 	render(){
+		let radioReceiveFrequency = this.state.currentData&&this.state.data[this.state.data.length-2] ? Number(1000/(this.state.currentData.time-this.state.data[this.state.data.length-2].time)).toPrecision(3).padEnd(5, 0) : 0
+		let noWarns = true
+		let noData = false
+		if (radioReceiveFrequency<0.9) noWarns = false
+		if(new Date().getTime() - this.state.currentData.time > 3000) {
+			noWarns = false
+			noData = true
+		}
 		return (
 			<div className="app">
 				<div className="window header">
@@ -78,8 +86,22 @@ class App extends React.Component{
 				<div className="window live-data-window">
 					<div><b>Data</b></div>
 					<hr />
-					<div className="live-data" id="rawdata">
+					{/* <div className="live-data" id="rawdata">
+					</div> */}
+					<div className="value-grid underlined">
+						{Object.keys(this.state.currentData).map(key=>{
+							let value = this.state.currentData[key]
+							return <>
+								<div>{key}:</div>
+								<div>{typeof value==='object' ? 
+										Object.keys(value).map(subKey=><>{subKey}: {value[subKey]}<br/></>)
+									: value}
+								</div>
+							</>
+						})}
+						
 					</div>
+					
 				</div>
 
 				<div className="window map-window">
@@ -96,7 +118,7 @@ class App extends React.Component{
 					<div><b>Status</b></div>
 					<hr />
 					{
-						(this.state.status==="ok"&&this.state.portStatus.status==="open") ? 
+						(this.state.status==="ok"&&this.state.portStatus.status==="open"&&noWarns) ? 
 						<div className="good bold">All services operational</div> :
 						(()=>{
 							switch (this.state.status){
@@ -109,6 +131,11 @@ class App extends React.Component{
 							}
 						})()
 					}
+					<div className="bad bold">
+						{radioReceiveFrequency<0.9&&!noData ? "Low datarate!" : null}
+						{noData&&this.state.portStatus.status==="open" ? `Not receiving data! (${(new Date().getTime() - this.state.currentData.time)/1000} s)` : null}
+						&nbsp;
+					</div>
 					<div><Clock format={'HH:mm:ss'} ticking/></div>
 					<div>&nbsp;</div>
 					Serial:
@@ -125,6 +152,10 @@ class App extends React.Component{
 							socket.emit('port-open')
 						}}>Open</button>
 					}
+					<br />
+					<br />
+					<div>Data freq.: <span className={(radioReceiveFrequency<0.9 ? 'bold bad' : (radioReceiveFrequency>1.1) ? 'good' : 'warn')}>{radioReceiveFrequency} Hz</span></div>
+					<div>Loop freq.: {this.state.currentData.loop} Hz</div>
 					
 				</div>
 				<div className="window sensor-window">
@@ -133,11 +164,11 @@ class App extends React.Component{
 					<div>GPS: {this.state.currentData.lat} {this.state.currentData.lon}</div>
 					<div>&nbsp;</div>
 					<div className="value-grid">
-						<div className="value-label">Temp1: {this.state.currentData.temp1.toPrecision(4).padStart(3, '0')}</div>
+						<div className="value-label">Temp1: {Number(this.state.currentData.temp1).toPrecision(4).padStart(3, '0')}</div>
 						<div className="value-bar-container"><div className="value-bar" style={{backgroundColor: '#FFEB3B', width: (this.state.currentData.temp1/100)*100 + 50 + '%'}}></div></div>
-						<div className="value-label">Temp2: {this.state.currentData.temp2.toPrecision(4).padStart(3, '0')}</div>
+						<div className="value-label">Temp2: {Number(this.state.currentData.temp2).toPrecision(4).padStart(3, '0')}</div>
 						<div className="value-bar-container"><div className="value-bar" style={{backgroundColor: '#2196f3', width: (this.state.currentData.temp2/100)*100 + 50 + '%'}}></div></div>
-						<div className="value-label">Temp3: {this.state.currentData.temp3.toPrecision(4).padStart(3, '0')}</div>
+						<div className="value-label">Temp3: {Number(this.state.currentData.temp3).toPrecision(4).padStart(3, '0')}</div>
 						<div className="value-bar-container"><div className="value-bar" style={{backgroundColor: '#4caf50', width: (this.state.currentData.temp3/100)*100 + 50 + '%'}}></div></div>
 					</div>
 					<ResponsiveContainer height={150} className="chart">
