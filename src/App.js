@@ -20,7 +20,26 @@ class App extends React.Component{
 		this.mapZoomStart = 0
 		this.state = {
 			portStatus: {status: null},
-			currentData: {uv1: 0, uv2: 0, uv3: 0, temp1: 0, temp2: 0, temp3: 0},
+			currentData: {
+				course: 0,
+				lat: 0,
+				lon: 0,
+				alt: 0,
+				temp1: 0,
+				temp2: 0,
+				temp3: 0,
+				acc: {x: 0, y: 0, z: 0},
+				mag: {x: 0, y: 0, z: 0},
+				gyro: {x: 0, y: 0, z: 0},
+				roll: 0,
+				pitch: 0,
+				yaw: 0,
+				pressure: 0,
+				humidity: 0,
+				uv: 0,
+				loop: 0,
+				time: 0
+			},
 			data: [],
 			status: null
 		}
@@ -31,11 +50,7 @@ class App extends React.Component{
 		L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {}).addTo(this.map)
 
 		socket.on('data', (data)=>{
-			//console.log(data)
-			//document.getElementById('rawdata').prepend(document.createElement('br'))
-			//document.getElementById('rawdata').prepend(data)
 			let dataObj = JSON.parse(data)
-
 			
 			let dataState = [...this.state.data, dataObj]
 			if (dataState.length>50) dataState.shift()
@@ -67,7 +82,7 @@ class App extends React.Component{
 		})
 	}
 	render(){
-		let radioReceiveFrequency = this.state.currentData&&this.state.data[this.state.data.length-2] ? Number(1000/(this.state.currentData.time-this.state.data[this.state.data.length-2].time)).toPrecision(3).padEnd(5, 0) : 0
+		let radioReceiveFrequency = this.state.currentData&&this.state.data[this.state.data.length-2] ? Number(1000/(this.state.currentData.time-this.state.data[this.state.data.length-2].time)).toFixed(3).padEnd(5, 0) : 0
 		let noWarns = true
 		let noData = false
 		if (radioReceiveFrequency<0.9) noWarns = false
@@ -86,10 +101,9 @@ class App extends React.Component{
 				<div className="window live-data-window">
 					<div><b>Data</b></div>
 					<hr />
-					{/* <div className="live-data" id="rawdata">
-					</div> */}
+					{}
 					<div className="value-grid underlined">
-						{Object.keys(this.state.currentData).map(key=>{
+						{["temp1","temp2","temp3","pressure","humidity","uv","acc","mag","gyro"].map(key=>{
 							let value = this.state.currentData[key]
 							return <>
 								<div>{key}:</div>
@@ -105,7 +119,7 @@ class App extends React.Component{
 				</div>
 
 				<div className="window map-window">
-					<div><b>Map</b></div>
+					<div>GPS: {this.state.currentData.lat.toFixed(9)} {this.state.currentData.lon.toFixed(9)}</div>
 					<hr />
 					<div id="mapid"></div>
 				</div>
@@ -155,20 +169,34 @@ class App extends React.Component{
 					<br />
 					<br />
 					<div>Data freq.: <span className={(radioReceiveFrequency<0.9 ? 'bold bad' : (radioReceiveFrequency>1.1) ? 'good' : 'warn')}>{radioReceiveFrequency} Hz</span></div>
-					<div>Loop freq.: {this.state.currentData.loop} Hz</div>
+					<div>Loop freq.: {Math.round(this.state.currentData.loop*1000)/1000} Hz</div>
 					
 				</div>
 				<div className="window sensor-window">
 					<div><b>Sensors</b></div>
 					<hr />
-					<div>GPS: {this.state.currentData.lat} {this.state.currentData.lon}</div>
+					
 					<div>&nbsp;</div>
 					<div className="value-grid">
-						<div className="value-label">Temp1: {Number(this.state.currentData.temp1).toPrecision(4).padStart(3, '0')}</div>
+						<div className="value-label">Altitude: {String(this.state.currentData.alt.toFixed(1)).padStart(4, '0')}</div>
+						<div className="value-bar-container"><div className="value-bar" style={{backgroundColor: '#FFEB3B', width: (this.state.currentData.alt/1500)*100 + '%'}}></div></div>
+					</div>
+					<div>
+					<ResponsiveContainer height={150} className="chart">
+						<LineChart data={this.state.data}>
+							<Line isAnimationActive={false} dot={false} type="linear" dataKey="alt" stroke="#FFEB3B" />
+							<YAxis tick={false} tickLine={false} width={0} domain={[Math.min.apply({}, this.state.data.map(u=>u.alt)), Math.max.apply({}, this.state.data.map(u=>u.alt))]}/>
+						</LineChart>
+					</ResponsiveContainer>
+					</div>
+					
+					<div>&nbsp;</div>
+					<div className="value-grid">
+						<div className="value-label">Temp1: {Number(this.state.currentData.temp1).toFixed(4).padStart(3, '0')}</div>
 						<div className="value-bar-container"><div className="value-bar" style={{backgroundColor: '#FFEB3B', width: (this.state.currentData.temp1/100)*100 + 50 + '%'}}></div></div>
-						<div className="value-label">Temp2: {Number(this.state.currentData.temp2).toPrecision(4).padStart(3, '0')}</div>
+						<div className="value-label">Temp2: {Number(this.state.currentData.temp2).toFixed(4).padStart(3, '0')}</div>
 						<div className="value-bar-container"><div className="value-bar" style={{backgroundColor: '#2196f3', width: (this.state.currentData.temp2/100)*100 + 50 + '%'}}></div></div>
-						<div className="value-label">Temp3: {Number(this.state.currentData.temp3).toPrecision(4).padStart(3, '0')}</div>
+						<div className="value-label">Temp3: {Number(this.state.currentData.temp3).toFixed(4).padStart(3, '0')}</div>
 						<div className="value-bar-container"><div className="value-bar" style={{backgroundColor: '#4caf50', width: (this.state.currentData.temp3/100)*100 + 50 + '%'}}></div></div>
 					</div>
 					<ResponsiveContainer height={150} className="chart">
@@ -179,22 +207,45 @@ class App extends React.Component{
 							<YAxis tick={false} tickLine={false} width={0} domain={[Math.min.apply({}, this.state.data.map(u=>Math.min(u.temp1, u.temp2, u.temp3))), Math.max.apply({}, this.state.data.map(u=>Math.max(u.temp1, u.temp2, u.temp3)))]}/>
 						</LineChart>
 					</ResponsiveContainer>
+					
 					<div>&nbsp;</div>
 					<div className="value-grid">
-						<div className="value-label">UV1: {String(this.state.currentData.uv1).padStart(4, '0')}</div>
-						<div className="value-bar-container"><div className="value-bar" style={{backgroundColor: '#FFEB3B', width: (this.state.currentData.uv1/50)*100 + '%'}}></div></div>
-						<div className="value-label">UV2: {String(this.state.currentData.uv2).padStart(4, '0')}</div>
-						<div className="value-bar-container"><div className="value-bar" style={{backgroundColor: '#2196f3', width: (this.state.currentData.uv2/50)*100 + '%'}}></div></div>
-						<div className="value-label">UV3: {String(this.state.currentData.uv3).padStart(4, '0')}</div>
-						<div className="value-bar-container"><div className="value-bar" style={{backgroundColor: '#4caf50', width: (this.state.currentData.uv3/50)*100 + '%'}}></div></div>
+						<div className="value-label">UV: {String(this.state.currentData.uv.toFixed(4)).padStart(4, '0')}</div>
+						<div className="value-bar-container"><div className="value-bar" style={{backgroundColor: '#FFEB3B', width: (this.state.currentData.uv/50)*100 + '%'}}></div></div>
 					</div>
 					<div>
 					<ResponsiveContainer height={150} className="chart">
 						<LineChart data={this.state.data}>
-							<Line isAnimationActive={false} dot={false} type="linear" dataKey="uv1" stroke="#FFEB3B" />
-							<Line isAnimationActive={false} dot={false} type="linear" dataKey="uv2" stroke="#2196f3" />
-							<Line isAnimationActive={false} dot={false} type="linear" dataKey="uv3" stroke="#4caf50" />
-							<YAxis tick={false} tickLine={false} width={0} domain={[Math.min.apply({}, this.state.data.map(u=>Math.min(u.uv1, u.uv2, u.uv3))), Math.max.apply({}, this.state.data.map(u=>Math.max(u.uv1, u.uv2, u.uv3)))]}/>
+							<Line isAnimationActive={false} dot={false} type="linear" dataKey="uv" stroke="#FFEB3B" />
+							<YAxis tick={false} tickLine={false} width={0} domain={[Math.min.apply({}, this.state.data.map(u=>u.uv)), Math.max.apply({}, this.state.data.map(u=>u.uv))]}/>
+						</LineChart>
+					</ResponsiveContainer>
+					</div>
+					
+					<div>&nbsp;</div>
+					<div className="value-grid">
+						<div className="value-label">Pressure: {String(this.state.currentData.pressure.toFixed(4)).padStart(4, '0')}</div>
+						<div className="value-bar-container"><div className="value-bar" style={{backgroundColor: '#FFEB3B', width: (this.state.currentData.pressure/10E5)*100 + '%'}}></div></div>
+					</div>
+					<div>
+					<ResponsiveContainer height={150} className="chart">
+						<LineChart data={this.state.data}>
+							<Line isAnimationActive={false} dot={false} type="linear" dataKey="pressure" stroke="#FFEB3B" />
+							<YAxis tick={false} tickLine={false} width={0} domain={[Math.min.apply({}, this.state.data.map(u=>u.pressure)), Math.max.apply({}, this.state.data.map(u=>u.pressure))]}/>
+						</LineChart>
+					</ResponsiveContainer>
+					</div>
+					
+					<div>&nbsp;</div>
+					<div className="value-grid">
+						<div className="value-label">Humidity: {String(this.state.currentData.humidity.toFixed(4)).padStart(4, '0')}</div>
+						<div className="value-bar-container"><div className="value-bar" style={{backgroundColor: '#FFEB3B', width: (this.state.currentData.humidity)*100 + '%'}}></div></div>
+					</div>
+					<div>
+					<ResponsiveContainer height={150} className="chart">
+						<LineChart data={this.state.data}>
+							<Line isAnimationActive={false} dot={false} type="linear" dataKey="humidity" stroke="#FFEB3B" />
+							<YAxis tick={false} tickLine={false} width={0} domain={[Math.min.apply({}, this.state.data.map(u=>u.humidity)), Math.max.apply({}, this.state.data.map(u=>u.humidity))]}/>
 						</LineChart>
 					</ResponsiveContainer>
 					</div>

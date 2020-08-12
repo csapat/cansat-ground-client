@@ -46,7 +46,7 @@
 .live-data-window{
 	grid-column: 1;
 	grid-row: 2/5;
-	overflow: hidden;
+	overflow: auto;
 	
 }
 .live-data-window #rawdata{
@@ -69,6 +69,7 @@
 .sensor-window{
 	grid-column: 3;
 	grid-row: 3/6;
+	overflow:auto;
 }
 
 .status-window{

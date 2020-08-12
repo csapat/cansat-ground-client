@@ -41,7 +41,6 @@ class MainSimulation extends React.Component {
 		planeGeometry.rotateX(Math.PI/2)
 		let planeMaterial = new THREE.MeshBasicMaterial({color: 0xf2b700, side: THREE.DoubleSide})
 		let plane = new THREE.Mesh(planeGeometry, planeMaterial)
-		//this.scene.add(plane)
 
 		let canGeometry = new THREE.CylinderGeometry(100, 100, 300, 100)
 		let can = new THREE.Mesh(canGeometry, planeMaterial)
@@ -55,12 +54,9 @@ class MainSimulation extends React.Component {
 
 		let loader = new THREE.OBJLoader()
 		loader.load('/wing_3d.OBJ', (obj)=>{
-			//new THREE.Geometry()
-
 			obj.traverse((node)=>{
 				if (node.isMesh){
 					node.material = planeMaterial
-					//console.log(node)
 					let meshEdgesGeometry = new THREE.EdgesGeometry(node.geometry, 15)
 					let wireframe = new THREE.LineSegments(meshEdgesGeometry, wireframeMaterial)
 					console.log(node)
@@ -85,34 +81,11 @@ class MainSimulation extends React.Component {
 	animate(){
 		
 		let can = this.scene.getObjectByName("can")
-		/*
-		let acc = this.props.currentData.acc
-		let mag = this.props.currentData.mag
-		if (acc){
-			let roll = Math.atan2(acc.y, acc.z)
-			let pitch = Math.atan2(-acc.x, Math.sqrt(acc.y*acc.y + acc.z*acc.z))
-			let mag_x = mag.x*Math.cos(pitch) + mag.y*Math.sin(roll)*Math.sin(pitch) + mag.z*Math.cos(roll)*Math.sin(pitch)
-			let mag_y = mag.y * Math.cos(roll) - mag.z * Math.sin(roll)
-			let yaw = Math.atan2(-mag_y,mag_x);
-			
-			can.rotation.x = roll
-			can.rotation.y = yaw
-			can.rotation.z = pitch
-			console.log(180*yaw/Math.PI)
-		}*/
-		can.rotation.x = (this.props.currentData.roll)*Math.PI/180
-		can.rotation.y = (this.props.currentData.course)*Math.PI/180
-		can.rotation.z = (this.props.currentData.pitch)*Math.PI/180
+
+		can.rotation.x = (this.props.currentData.roll||0)*Math.PI/180
+		can.rotation.y = (this.props.currentData.course||0)*Math.PI/180
+		can.rotation.z = (this.props.currentData.pitch||0)*Math.PI/180
 		this.camera.lookAt(can.position)
-		/*
-		if(can.position.y>150){
-			can.translateY(-5)
-			can.translateZ(50)
-		} else {
-			can.position.set(0, 3000, -25000)
-		}
-		this.camera.lookAt(can.position)
-		*/
 		this.renderer.render(this.scene, this.camera)
 		this.controls.update()
 		requestAnimationFrame(this.animate)
