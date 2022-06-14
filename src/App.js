@@ -4,13 +4,16 @@ import Clock from 'react-live-clock'
 import NewWindow from 'react-new-window'
 import io from 'socket.io-client'
 import L from 'leaflet'
-import { ResponsiveContainer, LineChart, Line, YAxis } from 'recharts'
+import { ResponsiveContainer, LineChart, Line, YAxis, CartesianGrid, XAxis } from 'recharts'
 
 import MainSimulation from './MainSimulation'
+
+import data from './data.json'
 
 const socket = io('http://localhost:8000/')
 
 //const position = [47.492266, 19.031861]
+
 
 const chartHeight = 97
 
@@ -36,7 +39,7 @@ class App extends React.Component{
 			status: null
 		}
 	}
-	componentDidMount(){
+	componentDidMount1(){
 		this.map = L.map('mapid').setView([0,0], 0)
 
 		L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {}).addTo(this.map)
@@ -73,6 +76,49 @@ class App extends React.Component{
 		})
 	}
 	render(){
+		return (
+			<div className="app">
+			
+			{Object.keys(data[0]).map(key=>{
+					if (typeof data[0][key] == 'object'){
+						return (
+							<>
+							<h1>{key}:</h1>
+							{Object.keys(data[0][key]).map(key2=>{
+								return (<>
+								<h2>{key}:{key2}</h2>
+								<ResponsiveContainer height={400} className="chart">
+									<LineChart data={data}>
+										<Line isAnimationActive={false} dot={false}  type="linear" stroke="#FFEB3B" dataKey={key + "." + key2}/>
+										<YAxis interval={"preserveStartEnd"} axisLine={false}/>
+										
+										<XAxis minTickGap={50} dataKey="time" tickFormatter={(val)=>new Date(val).toLocaleTimeString()}/>
+									</LineChart>
+								</ResponsiveContainer>
+								</>)
+							})}
+							</>
+						)
+					} else {
+						return (
+							<>
+							<h1>{key}</h1>
+							<ResponsiveContainer height={400} className="chart">
+								<LineChart data={data}>
+									<Line isAnimationActive={false} dot={false}  type="linear" stroke="#FFEB3B" dataKey={key}/>
+									<YAxis interval={"preserveStartEnd"} axisLine={false}/>
+									<XAxis minTickGap={50} dataKey="time" tickFormatter={(val)=>new Date(val).toLocaleTimeString()}/>
+								</LineChart>
+							</ResponsiveContainer>
+							</>
+						)
+					}
+			})}
+					
+			</div>
+		)
+	}
+	render0(){
 		let radioReceiveFrequency = this.state.currentData&&this.state.data[this.state.data.length-2] ? Number(1000/(this.state.currentData.time-this.state.data[this.state.data.length-2].time)).toFixed(3).padEnd(5, 0) : 0
 		let noWarns = true
 		let noData = false
